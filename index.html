@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senior Section CIE Tracker</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--text:#1d2129;--muted:#667085;--line:#e3e6ea;--accent:#185FA5;--accent-bg:#E6F1FB;--ok:#2F6B12;--ok-bg:#E9F4DC;--bad:#A32D2D;--bad-bg:#FCEBEB;--r:8px}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button{font:inherit;font-size:13px;padding:8px 14px;border:1px solid #cfd4da;border-radius:var(--r);background:var(--card);color:var(--text);cursor:pointer}
+button:hover{background:#f2f4f6}
+button:disabled{opacity:.6;cursor:wait}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{background:#0C447C}
+button.danger{color:var(--bad);border-color:#ebc0c0}
+button.sm{font-size:12px;padding:5px 10px}
+input,select,textarea{font:inherit;font-size:14px;padding:9px 10px;border:1px solid #cfd4da;border-radius:var(--r);background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent-bg);border-color:var(--accent)}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:1px}
+.okmsg{color:var(--ok);font-size:13px;margin-top:8px}
+.req{color:var(--bad)}
+.bad-in{border-color:var(--bad)!important}
+.lnk{color:var(--accent);text-decoration:none}.lnk:hover{text-decoration:underline}
+#demo{background:#FAEEDA;color:#633806;text-align:center;font-size:13px;padding:7px 12px}
+/* login */
+#login{min-height:calc(100vh - 34px);display:flex;align-items:center;justify-content:center;padding:20px}
+.lbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 28px;max-width:380px;width:100%}
+.lbox .logo{width:52px;height:52px;border-radius:14px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin:0 auto 14px}
+.lbox h1{font-size:20px;text-align:center;margin:0}
+.lbox .sub{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 22px}
+.lbox label{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+.lbox input{width:100%;margin-bottom:12px}
+.lbox button.primary{width:100%;padding:11px}
+/* app */
+header{background:var(--card);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:4}
+header h1{font-size:17px;margin:0;flex:1;display:flex;align-items:center;gap:10px}
+header .mini{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.who{font-size:13px;color:var(--muted)}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+main{max-width:1150px;margin:0 auto;padding:20px 20px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:17px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat p{margin:0}.stat .l{font-size:13px;color:var(--muted)}.stat .v{font-size:26px;font-weight:600;margin-top:2px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.bar input{flex:1;min-width:220px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+th{background:#f8f9fa;color:var(--muted);font-weight:500;font-size:12px}
+tr:last-child td{border-bottom:none}
+td.nm{color:var(--accent);cursor:pointer;font-weight:500}
+.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.pill.Left{background:var(--bad-bg);color:var(--bad)}.pill.Collected{background:var(--ok-bg);color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.grid input,.grid select,.grid textarea{width:100%}
+.full{grid-column:1/-1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 6px 4px 12px;border-radius:999px;background:var(--accent-bg);color:var(--accent);margin:0 6px 6px 0}
+.chip select{font-size:12px;padding:2px 4px}
+.chip .x{cursor:pointer;font-weight:700;padding:0 4px}
+.opt{font-size:12px;padding:5px 10px;margin:0 6px 6px 0}
+.drop{border:2px dashed #cfd4da;border-radius:var(--r);padding:28px;text-align:center;color:var(--muted);cursor:pointer}
+.drop:hover{border-color:var(--accent);color:var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:10}
+.modal{background:var(--card);border-radius:12px;padding:20px 22px;max-width:640px;width:100%}
+.modal h2{margin:0 0 4px;font-size:18px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px;margin:14px 0}
+.kv .k{color:var(--muted)}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
+.srow:last-child{border-bottom:none}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:#eef0f3;color:var(--muted)}
+#cards{display:none}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.mc .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.mc .nm2{font-weight:600;font-size:15px;color:var(--accent);cursor:pointer}
+.mc .meta{font-size:13px;color:var(--muted);margin-top:2px}
+.mc .subs{font-size:13px;margin-top:6px}
+.mc .act{display:flex;gap:8px;margin-top:10px}
+.mc .act button{flex:1;white-space:nowrap}
+.powered{text-align:center;font-size:12px;color:var(--muted);margin:0;padding:14px 0 18px}
+#login{min-height:calc(100vh - 80px)!important}
+#busy{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#1d2129;color:#fff;font-size:13px;padding:7px 14px;border-radius:999px;z-index:20}
+@media (max-width:820px){.c-ct{display:none} button{padding:10px 14px} input,select{font-size:16px}}
+@media (max-width:600px){
+ header{padding:10px 14px}
+ header h1{font-size:15px}
+ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(var(--navn,5),1fr);gap:2px;padding:6px;z-index:5}
+ nav button{border:none;font-size:11px;padding:10px 2px}
+ main{padding:12px 12px 20px} #app .powered{padding-bottom:90px}
+ .stats{gap:8px}.stat{padding:10px}.stat .l{font-size:12px}.stat .v{font-size:22px}
+ .bar input{min-width:100%}.bar select{flex:1;min-width:0}
+ .grid{grid-template-columns:1fr}
+ #v-list table{display:none}#cards{display:block}
+ #printBtn{display:none}
+ #v-log .card{padding:12px} #v-log .bar select{flex:1 1 40%} #v-log th:nth-child(1){width:auto!important}
+ .overlay{padding:0}.modal{border-radius:0;min-height:100%}
+ .kv{grid-template-columns:110px 1fr}
+}
+</style>
+</head>
+<body>
+<div id="demo" class="hidden">PREVIEW MODE: sample data only, nothing is saved. Refresh the page to start again.</div>
+<div id="busy" class="hidden">Saving…</div>
+
+<!-- LOGIN -->
+<div id="login">
+ <div class="lbox">
+  <div class="logo">CIE</div>
+  <h1>Senior Section CIE Tracker</h1>
+  <p class="sub" id="lSub">Staff login</p>
+  <div id="lStep1">
+   <label>Username</label><input id="lU" autocomplete="username" autocapitalize="none" placeholder="khurram">
+   <label>Password</label><input id="lP" type="password" autocomplete="current-password">
+   <button class="primary" id="lGo">Log in</button>
+   <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:13px"><a href="#" class="lnk" id="toCreate">First time? Create account</a><a href="#" class="lnk" id="toForgot">Forgot password?</a></div>
+  </div>
+  <div id="lStep2" class="hidden">
+   <p style="font-size:13px;margin:0 0 14px" class="muted">Use the username the admin added for you, then choose a password.</p>
+   <label>Username</label><input id="cE" autocomplete="username" autocapitalize="none">
+   <label>New password (at least 6 characters)</label><input id="lN1" type="password" autocomplete="new-password">
+   <label>Type it again</label><input id="lN2" type="password" autocomplete="new-password">
+   <button class="primary" id="lCreate">Create account and log in</button>
+   <button class="lback" style="width:100%;margin-top:8px">Back to login</button>
+  </div>
+  <div id="lStep3" class="hidden">
+   <p style="font-size:14px;margin:0 0 14px">Ask the admin to reset your password. After the reset, come back here and click <b>First time? Create account</b> to choose a new password with the same username.</p>
+   <button class="lback" style="width:100%">Back to login</button>
+  </div>
+  <div id="lErr" class="err" style="text-align:center"></div>
+  <div id="lOk" class="okmsg" style="text-align:center"></div>
+  <p id="demoHint" class="muted hidden" style="font-size:12px;text-align:center;margin:14px 0 0">Preview logins: <b>khurram</b> / <b>123456</b> (admin)<br><b>kashif</b> / <b>123456</b> (staff who can see the log)<br>or create an account for <b>colleague</b></p>
+ </div>
+</div>
+<p class="powered" id="pw1">Powered by Senior Section Management</p>
+
+<!-- APP -->
+<div id="app" class="hidden">
+<header>
+ <h1><span class="mini">CIE</span>Senior Section CIE Tracker</h1>
+ <span class="who" id="who"></span>
+ <button class="sm" id="outBtn">Log out</button>
+ <nav>
+  <button data-v="list" class="on">Students</button>
+  <button data-v="add">Add student</button>
+  <button data-v="import">Import</button>
+  <button data-v="staff" id="navStaff">Staff</button>
+  <button data-v="log" id="navLog">Activity log</button>
+  <button data-v="settings">Settings</button>
+ </nav>
+</header>
+<main>
+
+<section id="v-list">
+ <div class="stats">
+  <div class="stat"><p class="l">Total certificates</p><p class="v" id="sT">0</p></div>
+  <div class="stat"><p class="l">Collected</p><p class="v" id="sC" style="color:var(--ok)">0</p></div>
+  <div class="stat"><p class="l">Still left</p><p class="v" id="sL" style="color:var(--bad)">0</p></div>
+ </div>
+ <div class="bar">
+  <input id="q" placeholder="Search name, ERP number, candidate number or phone">
+  <select id="fy"><option value="">All years</option></select>
+  <select id="fs"><option value="">All series</option><option>May/June</option><option>Oct/Nov</option><option>Feb/March</option></select>
+  <select id="fst"><option value="">All status</option><option value="Left">Still left</option><option value="Collected">Collected</option></select>
+  <button id="refreshBtn" title="Load latest changes">Refresh</button>
+  <button id="printBtn">Print list</button>
+ </div>
+ <table>
+  <thead><tr><th>ERP no.</th><th>Candidate no.</th><th>Name of candidate</th><th>Year</th><th>Subjects</th><th class="c-ct">Contact</th><th>Status</th><th></th></tr></thead>
+  <tbody id="rows"></tbody>
+ </table>
+ <div id="cards"></div>
+ <div style="display:flex;gap:10px;align-items:center;margin-top:10px"><p class="muted" id="countLine" style="font-size:13px;margin:0"></p><button class="sm hidden" id="moreBtn">Show more</button></div>
+</section>
+
+<section id="v-add" class="hidden">
+ <div class="card">
+  <h2 id="formTitle">Add student</h2>
+  <div class="grid">
+   <div><label>ERP number <span class="req">*</span></label><input id="f-erp" placeholder="10234"></div>
+   <div><label>Candidate number <span class="req">*</span></label><input id="f-cn" placeholder="0012"></div>
+   <div class="full"><label>Name of candidate <span class="req">*</span></label><input id="f-name" placeholder="Ali Khan"></div>
+   <div><label>Year <span class="req">*</span></label><select id="f-year"></select></div>
+   <div><label>Series <span class="req">*</span></label><select id="f-series"><option>May/June</option><option>Oct/Nov</option><option>Feb/March</option></select></div>
+   <div><label>Contact number 1 <span class="req">*</span></label><input id="f-p1" placeholder="0300-1234567"></div>
+   <div><label>Contact number 2 <span class="muted">(optional)</span></label><input id="f-p2" placeholder="0321-7654321"></div>
+  </div>
+  <div style="margin-top:18px">
+   <label class="muted" style="font-size:12px;display:block;margin-bottom:6px">Subjects and grades (optional): click a subject to add it, then pick the grade</label>
+   <div id="chips"></div><div id="opts" style="margin-top:6px"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:18px"><button class="primary" id="saveBtn">Save student</button><button id="clearBtn">Clear form</button></div>
+  <div id="formErr" class="err"></div><div id="formOk" class="okmsg"></div>
+ </div>
+</section>
+
+<section id="v-import" class="hidden">
+ <div class="card">
+  <h2>Import a whole year</h2>
+  <p class="muted" style="margin:0 0 14px">Upload a CSV or Excel file with one row per student (subjects in one cell, separated by commas) or one row per subject (like Cambridge's results files). Rows for the same candidate are joined into one student.</p>
+  <div class="bar"><span class="muted">If the file has no year or series, use:</span><select id="i-year"></select><select id="i-series"><option>May/June</option><option>Oct/Nov</option><option>Feb/March</option></select></div>
+  <div class="drop" id="drop">Click to choose a file (.csv or .xlsx)</div>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls" class="hidden">
+  <div id="impErr" class="err"></div><div id="impPrev" style="margin-top:14px"></div>
+  <p class="muted" style="font-size:13px;margin-top:16px">Column names it recognises: ERP · Candidate Number · Name · Year · Series · Subject(s) · Grade(s) · Contact 1 · Contact 2.</p>
+  <button class="sm" id="tplBtn">Download a blank template (CSV)</button>
+ </div>
+</section>
+
+<section id="v-staff" class="hidden">
+ <div class="card">
+  <h2>Staff access</h2>
+  <p class="muted" style="margin:-6px 0 12px;font-size:13px">Only the admin sees this page. Add a staff member's username here, then they open the website, click "First time? Create account" and choose their own password.</p>
+  <div id="staffList"></div>
+  <div class="bar" style="margin-top:12px"><input id="newStaff" autocapitalize="none" placeholder="New username, e.g. sana"><button id="addStaffBtn">Add staff username</button></div>
+  <div id="staffErr" class="err"></div><div id="staffOk" class="okmsg"></div>
+ </div>
+</section>
+
+<section id="v-log" class="hidden">
+ <div class="card">
+  <h2>Activity log</h2>
+  <p class="muted" style="margin:-6px 0 12px;font-size:13px">Every action is recorded here automatically and can't be edited or deleted. Showing the latest 1,000 entries.</p>
+  <div class="bar">
+   <input id="lgQ" placeholder="Search student name, candidate no. or details">
+   <select id="lgU"><option value="">All users</option></select>
+   <select id="lgA"><option value="">All actions</option></select>
+   <button id="lgRefresh">Refresh</button>
+   <button id="lgCsv">Download log (CSV)</button>
+  </div>
+  <div id="lgErr" class="err"></div>
+  <div style="overflow-x:auto"><table><thead><tr><th style="width:140px">Date and time</th><th style="width:110px">User</th><th style="width:150px">Action</th><th>Details</th></tr></thead><tbody id="lgRows"></tbody></table></div>
+  <p class="muted" id="lgCount" style="font-size:13px;margin:10px 0 0"></p>
+ </div>
+</section>
+
+<section id="v-settings" class="hidden">
+ <div class="card">
+  <h2>Subjects list</h2>
+  <div id="subList"></div>
+  <div class="bar" style="margin-top:10px"><input id="newSub" placeholder="New subject name"><button id="addSubBtn">Add subject</button></div>
+  <div id="subErr" class="err"></div>
+ </div>
+ <div class="card">
+  <h2>Change my password</h2>
+  <div class="grid">
+   <div><label>Current password</label><input id="cp0" type="password"></div><div></div>
+   <div><label>New password</label><input id="cp1" type="password"></div>
+   <div><label>Type new password again</label><input id="cp2" type="password"></div>
+  </div>
+  <button style="margin-top:12px" id="cpBtn">Change password</button>
+  <div id="cpErr" class="err"></div><div id="cpOk" class="okmsg"></div>
+ </div>
+ <div class="card">
+  <h2>Export</h2>
+  <p class="muted" style="margin:0 0 12px">All records are saved online. Download a copy now and then for safekeeping.</p>
+  <button class="primary" id="csvBtn">Download all records (CSV for Excel)</button>
+ </div>
+</section>
+</main>
+<p class="powered">Powered by Senior Section Management</p>
+</div>
+
+<div id="ov" class="overlay hidden"><div class="modal" id="md"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script>
+/* ================= SETTINGS — read from config.js (see the setup guide) ================= */
+const CFG = window.CIE_CONFIG || {};
+const ADMIN_USERNAME = String(CFG.adminUsername || 'khurram').trim().toLowerCase();
+const LOGIN_DOMAIN = 'ss-cie-tracker.app'; // used behind the scenes only; nobody types it
+const firebaseConfig = CFG.firebase || {};
+
+/* ================= PREVIEW (demo) BACKEND — used only until Firebase settings are filled in ================= */
+const DEMO = typeof firebase === 'undefined' || !firebaseConfig.apiKey || firebaseConfig.apiKey === 'PASTE_HERE';
+const demo = (() => {
+  let n = 100;
+  const id = () => 'd' + (n++);
+  const ADMIN = 'khurram';
+  const accounts = {'khurram': '123456', 'kashif': '123456'};
+  let staffEmails = ['colleague','kashif'];
+  const logPerm = {kashif:true};
+  const logs = [];
+  const stamp = () => { const t = new Date(); return t.toLocaleDateString('en-GB') + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); };
+  let subjects = ['Mathematics','Additional Mathematics','Physics','Chemistry','Biology','English','Urdu','Islamiyat','Pakistan Studies','Computer Science','Economics','Accounting','Business Studies','Business','Global Perspectives'];
+  const S = (erp,cn,name,year,series,subs,grs,p1,p2,done) => ({id:id(),erp,cn,name,year,series,subjects:subs,grades:grs,p1,p2,st:done?'Collected':'Left',date:done?done[0]:'',by:done?done[1]:'',byName:done?done[2]:'',idno:done?done[3]:'',staff:done?ADMIN:'',rem:''});
+  let students = [
+    S('10234','0012','Ali Khan','2003','May/June','Mathematics, Physics, Chemistry, English, Urdu','A*, A, A, B, A','0300-1234567','0321-7654321'),
+    S('10567','0045','Sara Ahmed','2003','May/June','Biology, Chemistry, Physics, English','A, A, B, A*','0333-1112233','',['12-03-2026','Self','','35202-1234567-8']),
+    S('11890','0101','Usman Tariq','2010','Oct/Nov','Additional Mathematics, Mathematics, Physics, Computer Science','A*, A*, A, A','0345-9988776','0300-5544332'),
+    S('12455','0088','Ayesha Malik','2015','May/June','Economics, Accounting, Business Studies, English','A, B, A, A','0312-4455667','',['02-11-2026','Father','Malik Riaz','35201-7654321-0']),
+    S('13002','0150','Hamza Siddiqui','2019','May/June','Mathematics, Physics, Chemistry, Biology, Global Perspectives','B, B, C, B, A','0301-2223344','0322-6677889'),
+    S('13540','0033','Fatima Noor','2024','Oct/Nov','Business, Global Perspectives, Mathematics','A*, A, A','0336-7788990','')
+  ];
+  let sess = null;
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const need = () => { if (!sess) throw new Error('SESSION_EXPIRED'); return sess; };
+  const access = e => e === ADMIN || staffEmails.includes(e);
+  const staffList = () => [{user:ADMIN,role:'Admin',hasPassword:true,canLog:true}].concat(staffEmails.map(e => ({user:e,role:'Staff',hasPassword:!!accounts[e],canLog:!!logPerm[e]})));
+  const find = i => { const s = students.find(x => x.id === i); if (!s) throw new Error('This student no longer exists. Refresh the list.'); return s; };
+  const dup = (o, ex) => students.find(s => s.id !== ex && s.cn === o.cn && s.year === o.year && s.series === o.series);
+  return {
+    login(e, p) { e = String(e).trim().toLowerCase(); if (accounts[e] !== p) return {ok:false,error:'Wrong username or password'}; if (!access(e)) return {ok:false,error:"This username doesn't have staff access. Ask the admin to add it."}; sess = {user:e,role:e===ADMIN?'Admin':'Staff'}; return {ok:true,user:e,role:sess.role,canLog:e===ADMIN||!!logPerm[e]}; },
+    createAccount(e, p) { e = String(e).trim().toLowerCase(); if (accounts[e]) return {ok:false,error:'This username already has a password. Log in instead.'}; if (!access(e)) return {ok:false,error:"This username hasn't been added by the admin yet."}; accounts[e] = p; return this.login(e, p); },
+    resume() { return {ok:false}; },
+    logout() { sess = null; return {ok:true}; },
+    changePassword(t, o, nw) { const s = need(); if (accounts[s.user] !== o) return {ok:false,error:'Current password is wrong'}; accounts[s.user] = nw; return {ok:true}; },
+    getData() { const s = need(); return {ok:true,students:clone(students),subjects:subjects.slice(),staff:s.role==='Admin'?staffList():null}; },
+    saveStudent(t, o) { need(); const d = dup(o, o.id||''); if (d) return {ok:false,error:'Candidate '+d.cn+' is already saved for '+d.year+' '+d.series+' ('+d.name+')'}; if (o.id) { Object.assign(find(o.id), o); return {ok:true,student:clone(find(o.id))}; } const s = Object.assign({id:id(),st:'Left',date:'',by:'',byName:'',idno:'',staff:'',rem:''}, o); students.push(s); return {ok:true,student:clone(s)}; },
+    markCollected(t, i, c) { const ss = need(), s = find(i); if (s.st === 'Collected') return {ok:false,error:'Already marked collected by '+s.staff+' on '+s.date,student:clone(s)}; Object.assign(s, c, {st:'Collected',staff:ss.user}); return {ok:true,student:clone(s)}; },
+    undoCollected(t, i) { need(); const s = find(i); Object.assign(s, {st:'Left',date:'',by:'',byName:'',idno:'',staff:''}); return {ok:true,student:clone(s)}; },
+    setRemark(t, i, r) { need(); const s = find(i); s.rem = r; return {ok:true,student:clone(s)}; },
+    deleteStudent(t, i) { need(); students = students.filter(s => s.id !== i); return {ok:true}; },
+    importStudents(t, list) { need(); let a = 0; list.forEach(o => { if (dup(o,'')) return; students.push(Object.assign({id:id(),st:'Left',date:'',by:'',byName:'',idno:'',staff:'',rem:''}, o)); a++; String(o.subjects).split(',').map(x => x.trim()).filter(Boolean).forEach(x => { if (!subjects.some(y => y.toLowerCase() === x.toLowerCase())) subjects.push(x); }); }); return {ok:true,added:a,students:clone(students),subjects:subjects.slice()}; },
+    addSubject(t, nm) { need(); nm = String(nm).trim(); if (subjects.some(s => s.toLowerCase() === nm.toLowerCase())) return {ok:false,error:nm+' is already in the list'}; subjects.push(nm); return {ok:true,subjects:subjects.slice()}; },
+    removeSubject(t, nm) { need(); subjects = subjects.filter(s => s !== nm); return {ok:true,subjects:subjects.slice()}; },
+    addStaff(t, e) { need(); e = String(e).trim().toLowerCase(); if (!/^[a-z0-9._-]{3,30}$/.test(e)) return {ok:false,error:'Use 3–30 letters or numbers, no spaces'}; if (e === ADMIN || staffEmails.includes(e)) return {ok:false,error:e+' already has access'}; staffEmails.push(e); return {ok:true,staff:staffList()}; },
+    removeStaff(t, e) { need(); staffEmails = staffEmails.filter(x => x !== e); delete logPerm[e]; return {ok:true,staff:staffList()}; },
+    resetStaff(t, e) { need(); delete accounts[e]; return {ok:true,staff:staffList()}; },
+    setLogAccess(t, u, v) { need(); if (v) logPerm[u] = true; else delete logPerm[u]; return {ok:true,staff:staffList()}; },
+    addLog(a, d) { if (sess) logs.unshift({at:stamp(),user:sess.user,action:a,details:d}); return {ok:true}; },
+    getLog() { const s = need(); if (s.role !== 'Admin' && !logPerm[s.user]) return {ok:false,error:"You don't have permission to see the activity log."}; return {ok:true,log:logs.slice()}; }
+  };
+})();
+
+/* ================= FIREBASE BACKEND (live) ================= */
+const fb = (() => {
+  if (DEMO) return null;
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth(), db = firebase.firestore();
+  const adminEmail = ADMIN_USERNAME.trim().toLowerCase();
+  const toEmail = u => String(u).trim().toLowerCase() + '@' + LOGIN_DOMAIN;
+  const myEmail = () => (auth.currentUser && auth.currentUser.email || '').toLowerCase().split('@')[0];
+  const need = () => { if (!auth.currentUser) throw new Error('SESSION_EXPIRED'); };
+  const authMsg = e => {
+    const c = e && e.code || '';
+    if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return 'Wrong username or password';
+    if (c.includes('email-already-in-use')) return 'This username already has a password. Log in instead, or ask the admin to reset it.';
+    if (c.includes('invalid-email')) return 'Use 3–30 letters or numbers, no spaces';
+    if (c.includes('weak-password')) return 'Password must be at least 6 characters';
+    if (c.includes('too-many-requests')) return 'Too many attempts. Wait a few minutes and try again.';
+    if (c.includes('network')) return 'No internet connection. Check it and try again.';
+    if (c.includes('permission-denied')) return "You don't have permission to do this.";
+    return (e && e.message) || 'Something went wrong. Try again.';
+  };
+  async function checkAccess() {
+    const e = myEmail();
+    if (e === adminEmail) return {ok:true,user:e,role:'Admin',canLog:true};
+    try { const d = await db.collection('staff').doc(e).get(); if (d.exists) return {ok:true,user:e,role:'Staff',canLog:d.data().canViewLog === true}; } catch (x) {}
+    await auth.signOut();
+    return {ok:false,error:"This username doesn't have staff access. Ask the admin to add it."};
+  }
+  const toObj = d => Object.assign({id:d.id}, d.data());
+  const clean = v => String(v == null ? '' : v).trim().slice(0, 500);
+  const FIELDS = ['erp','cn','name','year','series','subjects','grades','p1','p2'];
+  let cache = [];
+  async function getSubjects() { const d = await db.collection('config').doc('settings').get(); return d.exists && Array.isArray(d.data().subjects) ? d.data().subjects : null; }
+  async function staffList() { const q = await db.collection('staff').get(); return [{user:adminEmail,role:'Admin',hasPassword:true,canLog:true}].concat(q.docs.map(d => ({user:d.id,role:'Staff',hasPassword:null,canLog:d.data().canViewLog === true}))); }
+  return {
+    authMsg,
+    async login(e, p) { try { await auth.signInWithEmailAndPassword(toEmail(e), p); return await checkAccess(); } catch (x) { return {ok:false,error:authMsg(x)}; } },
+    async createAccount(e, p) { try { await auth.createUserWithEmailAndPassword(toEmail(e), p); return await checkAccess(); } catch (x) { return {ok:false,error:authMsg(x)}; } },
+    resume() { return new Promise(res => { const off = auth.onAuthStateChanged(async u => { off(); res(u ? await checkAccess() : {ok:false}); }); }); },
+    async logout() { await auth.signOut(); return {ok:true}; },
+    async changePassword(t, o, nw) { need(); try { const u = auth.currentUser; await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, o)); await u.updatePassword(nw); return {ok:true}; } catch (x) { return {ok:false,error:/credential|wrong-password/.test(x.code||'') ? 'Current password is wrong' : authMsg(x)}; } },
+    async getData() { need(); const [q, subs] = await Promise.all([db.collection('students').get(), getSubjects()]); cache = q.docs.map(toObj);
+      let subjects = subs; if (!subjects) { subjects = DEFAULT_SUBJECTS.slice(); await db.collection('config').doc('settings').set({subjects}); }
+      return {ok:true,students:cache,subjects,staff:myEmail() === adminEmail ? await staffList() : null}; },
+    async saveStudent(t, o) { need();
+      const dup = students.find(s => s.id !== (o.id||'') && s.cn === o.cn && s.year === o.year && s.series === o.series);
+      if (dup) return {ok:false,error:'Candidate '+dup.cn+' is already saved for '+dup.year+' '+dup.series+' ('+dup.name+')'};
+      const data = {}; FIELDS.forEach(k => data[k] = clean(o[k])); data.updated = firebase.firestore.FieldValue.serverTimestamp();
+      if (o.id) { await db.collection('students').doc(o.id).update(data); }
+      else { Object.assign(data, {st:'Left',date:'',by:'',byName:'',idno:'',staff:'',rem:''}); const r = await db.collection('students').add(data); o.id = r.id; }
+      return {ok:true,student:toObj(await db.collection('students').doc(o.id).get())}; },
+    async markCollected(t, i, c) { need(); const ref = db.collection('students').doc(i);
+      return db.runTransaction(async tx => { const d = await tx.get(ref); if (!d.exists) throw new Error('This student no longer exists. Refresh the list.');
+        if (d.data().st === 'Collected') return {ok:false,error:'Already marked collected by '+d.data().staff+' on '+d.data().date,student:toObj(d)};
+        const upd = {st:'Collected',date:clean(c.date),by:clean(c.by),byName:clean(c.byName),idno:clean(c.idno),rem:clean(c.rem),staff:myEmail(),updated:firebase.firestore.FieldValue.serverTimestamp()};
+        tx.update(ref, upd); return {ok:true,student:Object.assign(toObj(d), upd)}; }); },
+    async undoCollected(t, i) { need(); const upd = {st:'Left',date:'',by:'',byName:'',idno:'',staff:''}; await db.collection('students').doc(i).update(upd); return {ok:true,student:Object.assign({}, students.find(s => s.id === i), upd)}; },
+    async setRemark(t, i, r) { need(); await db.collection('students').doc(i).update({rem:clean(r)}); return {ok:true,student:Object.assign({}, students.find(s => s.id === i), {rem:clean(r)})}; },
+    async deleteStudent(t, i) { need(); await db.collection('students').doc(i).delete(); return {ok:true}; },
+    async importStudents(t, list) { need(); let added = 0;
+      for (let k = 0; k < list.length; k += 400) { const b = db.batch();
+        list.slice(k, k + 400).forEach(o => { const d = {}; FIELDS.forEach(f => d[f] = clean(o[f])); Object.assign(d, {st:'Left',date:'',by:'',byName:'',idno:'',staff:'',rem:''}); b.set(db.collection('students').doc(), d); added++; });
+        await b.commit(); }
+      const subs = subjects.slice(); list.forEach(o => String(o.subjects).split(',').map(x => x.trim()).filter(Boolean).forEach(x => { if (!subs.some(y => y.toLowerCase() === x.toLowerCase())) subs.push(x); }));
+      if (subs.length !== subjects.length) await db.collection('config').doc('settings').set({subjects:subs});
+      const r = await this.getData(); return {ok:true,added,students:r.students,subjects:r.subjects}; },
+    async addSubject(t, nm) { need(); nm = clean(nm); if (subjects.some(s => s.toLowerCase() === nm.toLowerCase())) return {ok:false,error:nm+' is already in the list'}; const l = subjects.concat(nm); await db.collection('config').doc('settings').set({subjects:l}); return {ok:true,subjects:l}; },
+    async removeSubject(t, nm) { need(); const l = subjects.filter(s => s !== nm); await db.collection('config').doc('settings').set({subjects:l}); return {ok:true,subjects:l}; },
+    async addStaff(t, e) { need(); e = clean(e).toLowerCase(); if (!/^[a-z0-9._-]{3,30}$/.test(e)) return {ok:false,error:'Use 3–30 letters or numbers, no spaces'}; if (e === adminEmail) return {ok:false,error:'This is the admin username'};
+      await db.collection('staff').doc(e).set({role:'Staff',added:firebase.firestore.FieldValue.serverTimestamp()}); return {ok:true,staff:await staffList()}; },
+    async removeStaff(t, e) { need(); await db.collection('staff').doc(e).delete(); return {ok:true,staff:await staffList()}; },
+    async setLogAccess(t, u, v) { need(); await db.collection('staff').doc(u).update({canViewLog:!!v}); return {ok:true,staff:await staffList()}; },
+    async addLog(a, d) { if (!auth.currentUser) return {ok:false}; await db.collection('log').add({at:firebase.firestore.FieldValue.serverTimestamp(),user:myEmail(),action:String(a).slice(0,80),details:String(d||'').slice(0,500)}); return {ok:true}; },
+    async getLog() { need(); try { const q = await db.collection('log').orderBy('at','desc').limit(1000).get();
+      return {ok:true,log:q.docs.map(d => { const x = d.data(), dt = x.at && x.at.toDate ? x.at.toDate() : null; return {at:dt ? dt.toLocaleDateString('en-GB') + ' ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '…',user:x.user,action:x.action,details:x.details}; })}; }
+      catch (x) { return {ok:false,error:"You don't have permission to see the activity log."}; } },
+    watch(cb) { return db.collection('students').onSnapshot(q => cb(q.docs.map(toObj)), () => {}); }
+  };
+})();
+
+/* ================= bridge ================= */
+const DEFAULT_SUBJECTS = ['Mathematics','Additional Mathematics','Physics','Chemistry','Biology','English','Urdu','Islamiyat','Pakistan Studies','Computer Science','Economics','Accounting','Business Studies','Business','Global Perspectives'];
+function raw(fn, ...args) {
+  if (DEMO) return new Promise((res, rej) => setTimeout(() => { try { res(demo[fn](...args)); } catch (e) { rej(e); } }, 250));
+  return fb[fn](...args);
+}
+function describe(fn, a, r) {
+  const st = id => students.find(s => s.id === id);
+  const lab = s => s ? `${s.name} (Cand. ${s.cn}, ${s.year} ${s.series})` : '';
+  switch (fn) {
+    case 'login': return ['Logged in', ''];
+    case 'createAccount': return ['Created account', ''];
+    case 'changePassword': return ['Changed own password', ''];
+    case 'saveStudent': return [a[1].id ? 'Edited student' : 'Added student', lab(a[1])];
+    case 'markCollected': return ['Marked collected', lab(r.student) + ' — collected by ' + a[2].by + (a[2].byName ? ' (' + a[2].byName + ')' : '') + (a[2].idno ? ', ID ' + a[2].idno : '')];
+    case 'undoCollected': return ['Undid collected', lab(st(a[1]))];
+    case 'setRemark': return ['Changed remark', lab(st(a[1])) + (a[2] ? ': ' + a[2] : ' (cleared)')];
+    case 'deleteStudent': return ['Deleted student', lab(st(a[1]))];
+    case 'importStudents': return ['Imported students', r.added + ' students'];
+    case 'addSubject': return ['Added subject', a[1]];
+    case 'removeSubject': return ['Removed subject', a[1]];
+    case 'addStaff': return ['Added staff user', a[1]];
+    case 'removeStaff': return ['Removed staff user', a[1]];
+    case 'resetStaff': return ['Reset password', a[1]];
+    case 'setLogAccess': return [a[2] ? 'Gave log access' : 'Removed log access', a[1]];
+  }
+  return null;
+}
+async function api(fn, ...args) {
+  const r = await raw(fn, ...args);
+  if (r && r.ok) { const e = describe(fn, args, r); if (e) raw('addLog', e[0], e[1]).catch(() => {}); }
+  return r;
+}
+let busyN = 0;
+async function call(fn, ...args) {
+  busyN++; $('busy').classList.remove('hidden');
+  try { return await api(fn, ...args); }
+  catch (e) { const m = String(e && e.message || e); if (m.includes('SESSION_EXPIRED')) { toLogin('Your session ended. Log in again.'); throw {silent:true}; }
+    throw {message: fb && e && e.code ? fb.authMsg(e) : (m.replace(/^Error:\s*/, '') || 'Could not reach the server. Check the internet and try again.')}; }
+  finally { if (--busyN === 0) $('busy').classList.add('hidden'); }
+}
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => { const t = new Date(); return String(t.getDate()).padStart(2,'0') + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + t.getFullYear(); };
+const GRADES = ['A*','A','B','C','D','E','U','a','b','c','d','e','Q','X'];
+const subPairs = s => { const a = String(s.subjects||'').split(',').map(x => x.trim()).filter(Boolean), g = String(s.grades||'').split(',').map(x => x.trim()); return a.map((x,i) => [x, g[i]||'']); };
+const errText = e => e && e.silent ? '' : (e && e.message) || 'Something went wrong. Try again.';
+let token = 'fb', me = null, students = [], subjects = [], staff = null, editId = null, picked = [], shown = 200, unwatch = null;
+function fillYears(sel) { const cur = new Date().getFullYear(); for (let y = cur; y >= 2000; y--) { const o = document.createElement('option'); o.value = o.textContent = y; sel.appendChild(o); } }
+fillYears($('f-year')); fillYears($('i-year'));
+
+/* ================= login ================= */
+if (DEMO) { $('demo').classList.remove('hidden'); $('demoHint').classList.remove('hidden'); }
+function step(n) { [1,2,3].forEach(i => $('lStep'+i).classList.toggle('hidden', i !== n)); $('lSub').textContent = ['Staff login','Create your account','Reset your password'][n-1]; $('lErr').textContent = ''; $('lOk').textContent = ''; }
+$('toCreate').onclick = e => { e.preventDefault(); $('cE').value = $('lU').value; step(2); $('cE').focus(); };
+$('toForgot').onclick = e => { e.preventDefault(); step(3); };
+document.querySelectorAll('.lback').forEach(b => b.onclick = () => step(1));
+['lU','lP','cE','lN1','lN2'].forEach(i => $(i).addEventListener('input', () => { $('lErr').textContent = ''; $('lOk').textContent = ''; }));
+$('lP').addEventListener('keydown', e => { if (e.key === 'Enter') $('lGo').click(); });
+$('lN2').addEventListener('keydown', e => { if (e.key === 'Enter') $('lCreate').click(); });
+const validUser = v => /^[a-z0-9._-]{3,30}$/i.test(v);
+$('lGo').onclick = async () => {
+  const u = $('lU').value.trim(), p = $('lP').value;
+  if (!u) { $('lErr').textContent = 'Enter your username first'; return; }
+  if (!validUser(u)) { $('lErr').textContent = 'Wrong username or password'; return; }
+  if (!p) { $('lErr').textContent = 'Enter your password'; return; }
+  $('lGo').disabled = true;
+  const r = await call('login', u, p).catch(e => ({ok:false,error:errText(e)}));
+  $('lGo').disabled = false;
+  if (!r.ok) { $('lErr').textContent = r.error; return; }
+  enter(r);
+};
+$('lCreate').onclick = async () => {
+  const e = $('cE').value.trim(), a = $('lN1').value, b = $('lN2').value;
+  if (!validUser(e)) { $('lErr').textContent = 'Use the username the admin gave you (letters or numbers, no spaces)'; return; }
+  if (a.length < 6) { $('lErr').textContent = 'Password must be at least 6 characters'; return; }
+  if (a !== b) { $('lErr').textContent = "The two passwords don't match"; return; }
+  $('lCreate').disabled = true;
+  const r = await call('createAccount', e, a).catch(x => ({ok:false,error:errText(x)}));
+  $('lCreate').disabled = false;
+  if (!r.ok) { $('lErr').textContent = r.error; return; }
+  enter(r);
+};
+function enter(r) {
+  me = {user:r.user, role:r.role};
+  $('lP').value = $('lN1').value = $('lN2').value = '';
+  $('login').classList.add('hidden'); $('pw1').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('who').textContent = me.user + (me.role === 'Admin' ? ' (Admin)' : '');
+  me.canLog = me.role === 'Admin' || !!r.canLog;
+  $('navStaff').classList.toggle('hidden', me.role !== 'Admin');
+  $('navLog').classList.toggle('hidden', !me.canLog);
+  const nNav = [...document.querySelectorAll('nav button')].filter(b => !b.classList.contains('hidden')).length;
+  document.querySelector('nav').style.setProperty('--navn', nNav);
+  show('list'); load();
+  if (fb && !unwatch) unwatch = fb.watch(list => { students = list; drawList(); });
+}
+function toLogin(msg) {
+  me = null; if (unwatch) { unwatch(); unwatch = null; }
+  closeModal(); $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('pw1').classList.remove('hidden');
+  step(1); $('lErr').textContent = msg || '';
+}
+$('outBtn').onclick = async () => { await raw('addLog', 'Logged out', '').catch(() => {}); call('logout').catch(() => {}); toLogin(''); };
+async function load() {
+  try { const r = await call('getData', token); students = r.students; subjects = r.subjects; staff = r.staff; drawList(); drawChips(); drawSubs(); drawStaff(); }
+  catch (e) { if (!e.silent) $('countLine').textContent = errText(e); }
+}
+api('resume').then(r => { if (r && r.ok) enter(r); }).catch(() => {});
+
+/* ================= navigation ================= */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.v));
+function show(v) {
+  document.querySelectorAll('main>section').forEach(s => s.classList.add('hidden')); $('v-'+v).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (v === 'add' && !editId) resetForm(); if (v === 'log') loadLog(); window.scrollTo(0, 0);
+}
+$('refreshBtn').onclick = load;
+
+/* ================= list ================= */
+['q','fy','fs','fst'].forEach(i => $(i).addEventListener('input', () => { shown = 200; drawList(); }));
+$('moreBtn').onclick = () => { shown += 200; drawList(); };
+function filtered() {
+  const q = $('q').value.trim().toLowerCase(), y = $('fy').value, se = $('fs').value, st = $('fst').value;
+  return students.filter(s => (!y || s.year === y) && (!se || s.series === se) && (!st || s.st === st) && (!q || [s.name,s.erp,s.cn,s.p1,s.p2].join(' ').toLowerCase().includes(q)))
+    .sort((a,b) => b.year - a.year || String(a.cn).localeCompare(String(b.cn)));
+}
+const subHtml = s => subPairs(s).map(x => esc(x[0]) + ' <b>' + esc(x[1]) + '</b>').join(', ');
+function drawList() {
+  const fy = $('fy'), v = fy.value; fy.innerHTML = '<option value="">All years</option>';
+  [...new Set(students.map(s => s.year))].sort((a,b) => b - a).forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; fy.appendChild(o); }); fy.value = v;
+  const c = students.filter(s => s.st === 'Collected').length;
+  $('sT').textContent = students.length; $('sC').textContent = c; $('sL').textContent = students.length - c;
+  const all = filtered(), list = all.slice(0, shown), tb = $('rows');
+  const empty = m => { tb.innerHTML = `<tr><td colspan="8" style="padding:28px;text-align:center" class="muted">${m}</td></tr>`; $('cards').innerHTML = `<div class="mc muted" style="text-align:center;padding:24px">${m}</div>`; $('countLine').textContent = ''; $('moreBtn').classList.add('hidden'); };
+  if (!students.length) return empty('Start by adding a student or importing a year.');
+  if (!all.length) return empty('No students match these filters.');
+  tb.innerHTML = list.map(s => `<tr><td>${esc(s.erp)}</td><td>${esc(s.cn)}</td><td class="nm" data-k="${esc(s.id)}">${esc(s.name)}</td>
+   <td>${esc(s.year)}<br><span class="muted" style="font-size:12px">${esc(s.series)}</span></td><td style="max-width:240px">${subHtml(s) || '<span class="muted">-</span>'}</td>
+   <td class="c-ct">${esc(s.p1)}${s.p2 ? '<br>' + esc(s.p2) : ''}</td>
+   <td><span class="pill ${esc(s.st)}">${s.st === 'Collected' ? 'Collected' : 'Left'}</span>${s.st === 'Collected' ? `<br><span class="muted" style="font-size:12px">${esc(s.date)}</span>` : ''}</td>
+   <td>${s.st === 'Collected' ? '' : `<button class="sm" data-c="${esc(s.id)}">Mark collected</button>`}</td></tr>`).join('');
+  $('cards').innerHTML = list.map(s => `<div class="mc"><div class="top"><div><div class="nm2" data-k="${esc(s.id)}">${esc(s.name)}</div>
+   <div class="meta">${esc(s.year)} ${esc(s.series)} · Cand. ${esc(s.cn)}${s.erp ? ' · ERP ' + esc(s.erp) : ''}</div></div><span class="pill ${esc(s.st)}">${s.st === 'Collected' ? 'Collected' : 'Left'}</span></div>
+   <div class="subs">${subHtml(s) || '<span class="muted">No subjects</span>'}</div>${s.p1 ? `<div class="meta" style="margin-top:6px">${esc(s.p1)}${s.p2 ? ' · ' + esc(s.p2) : ''}</div>` : ''}
+   ${s.st === 'Collected' ? `<div class="meta">Collected ${esc(s.date)} · ${esc(s.by)}</div>` : ''}
+   <div class="act"><button data-k="${esc(s.id)}">Details</button>${s.st === 'Collected' ? '' : `<button class="primary" data-c="${esc(s.id)}">Mark collected</button>`}</div></div>`).join('');
+  $('countLine').textContent = `Showing ${list.length} of ${all.length}`;
+  $('moreBtn').classList.toggle('hidden', all.length <= shown);
+  document.querySelectorAll('#rows [data-k],#cards [data-k]').forEach(e => e.onclick = () => detail(e.dataset.k));
+  document.querySelectorAll('#rows [data-c],#cards [data-c]').forEach(e => e.onclick = () => collect(e.dataset.c));
+}
+const find = id => students.find(s => s.id === id);
+function putStudent(s) { const i = students.findIndex(x => x.id === s.id); if (i >= 0) students[i] = s; else students.push(s); drawList(); }
+
+/* ================= modals ================= */
+function openModal(h) { $('md').innerHTML = h; $('ov').classList.remove('hidden'); }
+function closeModal() { $('ov').classList.add('hidden'); }
+$('ov').onclick = e => { if (e.target.id === 'ov') closeModal(); };
+function ask(title, msg, yes, fn) {
+  openModal(`<h2>${esc(title)}</h2><p class="muted">${esc(msg)}</p><div id="aErr" class="err"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="primary" id="aY">${esc(yes)}</button><button id="aN">Cancel</button></div>`);
+  $('aN').onclick = closeModal;
+  $('aY').onclick = async () => { $('aY').disabled = true; try { await fn(); closeModal(); } catch (e) { $('aErr').textContent = errText(e); $('aY').disabled = false; } };
+}
+function detail(id) {
+  const s = find(id); if (!s) return closeModal();
+  const done = s.st === 'Collected';
+  openModal(`<h2>${esc(s.name)}</h2><span class="pill ${esc(s.st)}">${done ? 'Collected' : 'Left'}</span>
+  <div class="kv"><span class="k">ERP number</span><span>${esc(s.erp)||'-'}</span><span class="k">Candidate number</span><span>${esc(s.cn)||'-'}</span>
+  <span class="k">Year / series</span><span>${esc(s.year)} ${esc(s.series)}</span>
+  <span class="k">Subjects</span><span>${subPairs(s).map(x => esc(x[0]) + ': <b>' + esc(x[1]) + '</b>').join('<br>') || '-'}</span>
+  <span class="k">Contact 1</span><span>${esc(s.p1)||'-'}</span><span class="k">Contact 2</span><span>${esc(s.p2)||'-'}</span>
+  ${done ? `<span class="k">Collected on</span><span>${esc(s.date)}</span><span class="k">Collected by</span><span>${esc(s.by)}${s.byName ? ' (' + esc(s.byName) + ')' : ''}</span>
+  <span class="k">ID checked</span><span>${esc(s.idno)||'-'}</span><span class="k">Handed over by</span><span>${esc(s.staff)||'-'}</span>` : ''}
+  <span class="k">Remarks</span><span>${esc(s.rem)||'-'}</span></div><div id="dErr" class="err"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${done ? '<button id="mUndo">Undo collected</button>' : '<button class="primary" id="mCol">Mark collected</button>'}
+  <button id="mEdit">Edit</button><button id="mRem">Remark</button><button class="danger" id="mDel">Delete</button><button id="mClose" style="margin-left:auto">Close</button></div>`);
+  $('mClose').onclick = closeModal;
+  $('mEdit').onclick = () => { closeModal(); startEdit(id); };
+  $('mRem').onclick = () => remark(id);
+  $('mDel').onclick = () => ask('Delete ' + s.name + '?', 'This removes the student for all staff.', 'Delete', async () => { await call('deleteStudent', token, id); students = students.filter(x => x.id !== id); drawList(); });
+  if ($('mCol')) $('mCol').onclick = () => collect(id);
+  if ($('mUndo')) $('mUndo').onclick = () => ask('Undo collected?', s.name + ' will show as not collected again.', 'Undo', async () => { const r = await call('undoCollected', token, id); putStudent(r.student); });
+}
+function collect(id) {
+  const s = find(id);
+  openModal(`<h2>Hand over certificate</h2><p class="muted" style="margin:0 0 14px">${esc(s.name)} · ${esc(s.year)} ${esc(s.series)} · Candidate ${esc(s.cn)}</p>
+  <div class="grid"><div><label>Collected by</label><select id="cBy"><option>Self</option><option>Father</option><option>Mother</option><option>Brother/Sister</option><option>Authorised person</option></select></div>
+  <div><label>Date</label><input id="cDate" value="${today()}"></div><div id="cNameW" class="hidden"><label>Collector's name</label><input id="cName"></div>
+  <div><label>CNIC / B-Form no. checked</label><input id="cId" placeholder="35202-xxxxxxx-x"></div><div class="full"><label>Remarks (optional)</label><input id="cRem" value="${esc(s.rem)}"></div></div>
+  <div id="cErr" class="err"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="primary" id="cOk">Confirm collected</button><button id="cNo">Cancel</button></div>`);
+  $('cBy').onchange = () => $('cNameW').classList.toggle('hidden', $('cBy').value === 'Self');
+  $('cName').oninput = () => $('cErr').textContent = ''; $('cNo').onclick = closeModal;
+  $('cOk').onclick = async () => {
+    const by = $('cBy').value;
+    if (by !== 'Self' && !$('cName').value.trim()) { $('cErr').textContent = "Enter the collector's name first"; return; }
+    if (!$('cDate').value.trim()) { $('cErr').textContent = 'Enter the date first'; return; }
+    $('cOk').disabled = true;
+    try { const r = await call('markCollected', token, id, {date:$('cDate').value.trim(),by,byName:by==='Self'?'':$('cName').value.trim(),idno:$('cId').value.trim(),rem:$('cRem').value.trim()});
+      if (r.student) putStudent(r.student); if (!r.ok) { $('cErr').textContent = r.error; $('cOk').disabled = false; return; } closeModal(); }
+    catch (e) { $('cErr').textContent = errText(e); $('cOk').disabled = false; }
+  };
+}
+function remark(id) {
+  const s = find(id);
+  openModal(`<h2>Remark</h2><p class="muted" style="margin:0 0 10px">${esc(s.name)}</p><textarea id="rT" rows="3" style="width:100%" placeholder="Called 22-11-2026, no answer">${esc(s.rem)}</textarea><div id="rErr" class="err"></div>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="primary" id="rOk">Save remark</button><button id="rNo">Cancel</button></div>`);
+  $('rNo').onclick = () => detail(id);
+  $('rOk').onclick = async () => { $('rOk').disabled = true; try { const r = await call('setRemark', token, id, $('rT').value.trim()); putStudent(r.student); detail(id); } catch (e) { $('rErr').textContent = errText(e); $('rOk').disabled = false; } };
+}
+
+/* ================= add / edit ================= */
+function resetForm() { editId = null; picked = []; ['f-erp','f-cn','f-name','f-p1','f-p2'].forEach(i => { $(i).value = ''; $(i).classList.remove('bad-in'); }); $('formTitle').textContent = 'Add student'; $('saveBtn').textContent = 'Save student'; $('formErr').textContent = ''; drawChips(); }
+function startEdit(id) {
+  const s = find(id); show('add'); editId = id;
+  $('f-erp').value = s.erp; $('f-cn').value = s.cn; $('f-name').value = s.name; $('f-year').value = s.year; $('f-series').value = s.series; $('f-p1').value = s.p1; $('f-p2').value = s.p2;
+  picked = subPairs(s).map(x => ({s:x[0], g:x[1]})); $('formTitle').textContent = 'Edit student'; $('saveBtn').textContent = 'Save changes'; $('formErr').textContent = ''; $('formOk').textContent = ''; drawChips();
+}
+function drawChips() {
+  const c = $('chips'); c.innerHTML = '';
+  if (!picked.length) c.innerHTML = '<span class="muted" style="font-size:13px">No subjects yet</span>';
+  picked.forEach((p, i) => { const d = document.createElement('span'); d.className = 'chip'; const gs = GRADES.includes(p.g) ? GRADES : [p.g, ...GRADES];
+    d.innerHTML = esc(p.s) + ' <select>' + gs.map(g => `<option${g === p.g ? ' selected' : ''}>${esc(g)}</option>`).join('') + '</select><span class="x" title="Remove">×</span>';
+    d.querySelector('select').onchange = e => p.g = e.target.value; d.querySelector('.x').onclick = () => { picked.splice(i, 1); drawChips(); }; c.appendChild(d); });
+  const o = $('opts'); o.innerHTML = '';
+  subjects.filter(s => !picked.find(p => p.s === s)).forEach(s => { const b = document.createElement('button'); b.className = 'opt'; b.textContent = '+ ' + s; b.onclick = () => { picked.push({s, g:'A'}); drawChips(); }; o.appendChild(b); });
+}
+['f-erp','f-cn','f-name','f-p1','f-p2'].forEach(i => $(i).addEventListener('input', () => { $(i).classList.remove('bad-in'); $('formErr').textContent = ''; $('formOk').textContent = ''; }));
+$('clearBtn').onclick = () => { resetForm(); $('formOk').textContent = ''; };
+$('saveBtn').onclick = async () => {
+  const v = i => $(i).value.trim();
+  const req = [['f-erp','ERP number'],['f-cn','candidate number'],['f-name','name of candidate'],['f-year','year'],['f-series','series'],['f-p1','contact number 1']];
+  req.forEach(([i]) => $(i).classList.toggle('bad-in', !v(i)));
+  const miss = req.filter(([i]) => !v(i)).map(x => x[1]);
+  if (miss.length) { $('formErr').textContent = 'Fill in: ' + miss.join(', '); const first = req.find(([i]) => !v(i)); $(first[0]).focus(); return; }
+  const o = {erp:v('f-erp'),cn:v('f-cn'),name:v('f-name'),year:$('f-year').value,series:$('f-series').value,p1:v('f-p1'),p2:v('f-p2'),subjects:picked.map(x => x.s).join(', '),grades:picked.map(x => x.g).join(', ')};
+  if (editId) o.id = editId;
+  $('saveBtn').disabled = true;
+  try { const r = await call('saveStudent', token, o);
+    if (!r.ok) { $('formErr').textContent = r.error; }
+    else { putStudent(r.student); const y = o.year, se = o.series, was = editId; resetForm(); $('f-year').value = y; $('f-series').value = se;
+      $('formOk').textContent = was ? o.name + ' updated.' : o.name + ' saved. Status set to "Left". Add the next student.'; $('f-erp').focus(); } }
+  catch (e) { $('formErr').textContent = errText(e); }
+  $('saveBtn').disabled = false;
+};
+
+/* ================= import ================= */
+$('drop').onclick = () => $('file').click();
+let pending = [];
+$('file').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; $('impErr').textContent = ''; $('impPrev').innerHTML = ''; if (!f) return;
+  try { let rows;
+    if (/\.csv$/i.test(f.name)) rows = parseCSV(await f.text());
+    else { if (typeof XLSX === 'undefined') { $('impErr').textContent = 'The Excel reader did not load. Save the file as CSV and try again.'; return; }
+      const wb = XLSX.read(await f.arrayBuffer()); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1,raw:false,defval:''}); }
+    build(rows); } catch (err) { $('impErr').textContent = 'Could not read this file. Check it is a CSV or Excel file.'; }
+};
+function parseCSV(t) { const out = []; let row = [], f = '', q = false; for (let i = 0; i < t.length; i++) { const c = t[i];
+  if (q) { if (c == '"') { if (t[i+1] == '"') { f += '"'; i++; } else q = false; } else f += c; }
+  else if (c == '"') q = true; else if (c == ',') { row.push(f); f = ''; } else if (c == '\n' || c == '\r') { if (c == '\r' && t[i+1] == '\n') i++; row.push(f); out.push(row); row = []; f = ''; } else f += c; }
+  if (f || row.length) { row.push(f); out.push(row); } return out.filter(r => r.some(x => String(x).trim())); }
+function colIndex(h) { const n = h.map(x => String(x).toLowerCase().replace(/[^a-z0-9]/g, '')); const fi = (...k) => n.findIndex(x => k.some(y => x.includes(y)));
+  const p1 = fi('contact1','contactnumber1','phone1','mobile1','contactno1'), p2 = fi('contact2','contactnumber2','phone2','mobile2','contactno2');
+  return {erp:fi('erp'),cn:fi('candidatenumber','candidateno','candno','candnumber','indexno','candidate'),name:n.findIndex(x => x.includes('name') && !x.includes('father')),
+    year:fi('year'),series:fi('series','session'),sub:fi('subject','syllabus'),gr:fi('grade','result'),p1:p1 >= 0 ? p1 : fi('contact','phone','mobile'),p2}; }
+function normSeries(s) { s = String(s).toLowerCase(); if (!s) return ''; if (/nov|oct/.test(s)) return 'Oct/Nov'; if (/feb|mar/.test(s)) return 'Feb/March'; if (/may|jun/.test(s)) return 'May/June'; return ''; }
+function build(rows) {
+  if (rows.length < 2) { $('impErr').textContent = 'The file has no data rows.'; return; }
+  const ci = colIndex(rows[0]);
+  if (ci.cn < 0 || ci.name < 0) { $('impErr').textContent = 'Could not find "Candidate Number" and "Name" columns. Check the first row has column names.'; return; }
+  const g = k => r => k >= 0 ? String(r[k] ?? '').trim() : ''; const map = new Map();
+  rows.slice(1).forEach(r => { const cn = g(ci.cn)(r), name = g(ci.name)(r); if (!cn && !name) return;
+    const year = (g(ci.year)(r).match(/\d{4}/) || [])[0] || $('i-year').value, series = normSeries(g(ci.series)(r)) || $('i-series').value, key = cn + '|' + year + '|' + series;
+    if (!map.has(key)) map.set(key, {erp:g(ci.erp)(r),cn,name,year,series,p1:g(ci.p1)(r),p2:g(ci.p2)(r),subs:[]});
+    const s = map.get(key); if (!s.erp) s.erp = g(ci.erp)(r); if (!s.p1) s.p1 = g(ci.p1)(r); if (!s.p2) s.p2 = g(ci.p2)(r);
+    const subs = g(ci.sub)(r).split(/[,;\/]/).map(x => x.trim()).filter(Boolean), grs = g(ci.gr)(r).split(/[,;\/]/).map(x => x.trim());
+    subs.forEach((x, i) => { if (!s.subs.find(y => y[0].toLowerCase() === x.toLowerCase())) s.subs.push([x, grs[i] || '']); }); });
+  const all = [...map.values()];
+  pending = all.filter(p => !students.some(s => s.cn === p.cn && s.year === p.year && s.series === p.series));
+  const skipped = all.length - pending.length, nSub = pending.reduce((a, p) => a + p.subs.length, 0);
+  $('impPrev').innerHTML = `<p class="okmsg" style="margin:0 0 8px">File read: ${all.length} students.${skipped ? ` ${skipped} are already saved and will be skipped.` : ''} ${pending.length} new, with ${nSub} subject grades.</p>
+  <table><thead><tr><th>Candidate no.</th><th>Name</th><th>Year</th><th>Subjects</th></tr></thead><tbody>
+  ${pending.slice(0,5).map(p => `<tr><td>${esc(p.cn)}</td><td>${esc(p.name)}</td><td>${esc(p.year)} ${esc(p.series)}</td><td>${p.subs.map(x => esc(x[0]) + ' ' + esc(x[1])).join(', ')}</td></tr>`).join('')}
+  ${pending.length > 5 ? `<tr><td colspan="4" class="muted">+ ${pending.length - 5} more</td></tr>` : ''}</tbody></table>
+  <div style="display:flex;gap:8px;margin-top:12px">${pending.length ? `<button class="primary" id="doImp">Import ${pending.length} students</button>` : ''}<button id="noImp">Cancel</button></div><div id="impRes"></div>`;
+  $('noImp').onclick = () => { pending = []; $('impPrev').innerHTML = ''; };
+  if ($('doImp')) $('doImp').onclick = async () => {
+    $('doImp').disabled = true;
+    const list = pending.map(p => ({erp:p.erp,cn:p.cn,name:p.name,year:p.year,series:p.series,p1:p.p1,p2:p.p2,subjects:p.subs.map(x => x[0]).join(', '),grades:p.subs.map(x => x[1]).join(', ')}));
+    try { const r = await call('importStudents', token, list); students = r.students; subjects = r.subjects; drawList(); drawChips(); drawSubs(); pending = []; $('impPrev').innerHTML = `<p class="okmsg">${r.added} students imported.</p>`; }
+    catch (e) { $('impRes').innerHTML = `<p class="err">${esc(errText(e))}</p>`; $('doImp').disabled = false; }
+  };
+}
+
+/* ================= staff (admin) ================= */
+function drawStaff() {
+  if (!staff) return;
+  $('staffList').innerHTML = staff.map(s => `<div class="srow"><b style="flex:1;font-weight:600;word-break:break-all">${esc(s.user)}</b><span class="tag">${esc(s.role)}</span>
+   ${s.hasPassword === false ? '<span class="tag" style="background:#FAEEDA;color:#633806">No account yet</span>' : ''}
+   ${s.role === 'Admin' ? '<span class="tag">Sees activity log</span>' : `<label style="font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-log="${esc(s.user)}" ${s.canLog ? 'checked' : ''} style="width:16px;height:16px;padding:0"> Can see activity log</label><button class="sm" data-reset="${esc(s.user)}">Reset password</button><button class="sm danger" data-rm="${esc(s.user)}">Remove access</button>`}</div>`).join('');
+  $('staffList').querySelectorAll('[data-log]').forEach(c => c.onchange = async () => { $('staffErr').textContent = ''; $('staffOk').textContent = '';
+    try { const r = await call('setLogAccess', token, c.dataset.log, c.checked); if (!r.ok) throw {message:r.error}; staff = r.staff; drawStaff(); $('staffOk').textContent = c.dataset.log + (c.checked ? ' can now see the activity log.' : ' can no longer see the activity log.'); }
+    catch (e) { c.checked = !c.checked; $('staffErr').textContent = errText(e); } });
+  $('staffList').querySelectorAll('[data-reset]').forEach(b => b.onclick = () => resetHelp(b.dataset.reset));
+  $('staffList').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => ask('Remove ' + b.dataset.rm + '?', 'They will no longer be able to open the records. Records they entered stay saved.', 'Remove access', async () => { const r = await call('removeStaff', token, b.dataset.rm); if (!r.ok) throw {message:r.error}; staff = r.staff; drawStaff(); }));
+}
+function resetHelp(u) {
+  if (DEMO) return ask('Reset password for ' + u + '?', 'They will choose a new password with "First time? Create account".', 'Reset', async () => { const r = await call('resetStaff', token, u); staff = r.staff; drawStaff(); });
+  openModal(`<h2>Reset password for ${esc(u)}</h2><p class="muted" style="margin:6px 0 12px">For safety, passwords can only be reset from your Firebase control panel:</p>
+  <ol style="font-size:14px;line-height:1.7;padding-left:20px;margin:0 0 12px"><li>Open <b>console.firebase.google.com</b> and choose your project.</li><li>Go to <b>Build &gt; Authentication &gt; Users</b>.</li><li>Find <b>${esc(u)}@${esc(LOGIN_DOMAIN)}</b>, click the three dots, then <b>Delete account</b>.</li><li>Tell ${esc(u)} to open this website and click <b>First time? Create account</b>, using the same username.</li></ol>
+  <p class="muted" style="font-size:13px;margin:0 0 14px">Their records and access stay as they are.</p><button id="rhOk">Got it</button>`);
+  $('rhOk').onclick = closeModal;
+}
+$('newStaff').oninput = () => { $('staffErr').textContent = ''; $('staffOk').textContent = ''; };
+$('addStaffBtn').onclick = async () => {
+  const v = $('newStaff').value.trim().toLowerCase(); if (!v) { $('staffErr').textContent = 'Enter a username first'; return; }
+  try { const r = await call('addStaff', token, v); if (!r.ok) { $('staffErr').textContent = r.error; return; } staff = r.staff; $('newStaff').value = ''; drawStaff(); $('staffOk').textContent = v + ' added. Ask them to open the website and click "First time? Create account".'; } catch (e) { $('staffErr').textContent = errText(e); }
+};
+
+/* ================= activity log ================= */
+let logRows = [];
+async function loadLog() {
+  $('lgErr').textContent = '';
+  try { const r = await call('getLog'); if (!r.ok) { $('lgErr').textContent = r.error; logRows = []; } else logRows = r.log; }
+  catch (e) { $('lgErr').textContent = errText(e); logRows = []; }
+  const fill = (id, vals, all) => { const s = $(id), v = s.value; s.innerHTML = `<option value="">${all}</option>` + vals.map(x => `<option>${esc(x)}</option>`).join(''); s.value = vals.includes(v) ? v : ''; };
+  fill('lgU', [...new Set(logRows.map(x => x.user))].sort(), 'All users');
+  fill('lgA', [...new Set(logRows.map(x => x.action))].sort(), 'All actions');
+  drawLog();
+}
+function logFiltered() { const q = $('lgQ').value.trim().toLowerCase(), u = $('lgU').value, a = $('lgA').value;
+  return logRows.filter(x => (!u || x.user === u) && (!a || x.action === a) && (!q || (x.details + ' ' + x.action).toLowerCase().includes(q))); }
+function drawLog() {
+  const l = logFiltered();
+  $('lgRows').innerHTML = l.length ? l.map(x => `<tr><td>${esc(x.at)}</td><td>${esc(x.user)}</td><td>${esc(x.action)}</td><td>${esc(x.details) || '<span class="muted">-</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="muted" style="text-align:center;padding:24px">${logRows.length ? 'No entries match these filters.' : 'No activity recorded yet.'}</td></tr>`;
+  $('lgCount').textContent = l.length ? `Showing ${l.length} of ${logRows.length} entries` : '';
+}
+['lgQ','lgU','lgA'].forEach(i => $(i).addEventListener('input', drawLog));
+$('lgRefresh').onclick = loadLog;
+$('lgCsv').onclick = () => { const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  download('activity_log_' + today() + '.csv', '\ufeff' + [['Date and time','User','Action','Details'].map(q).join(',')].concat(logFiltered().map(x => [x.at,x.user,x.action,x.details].map(q).join(','))).join('\r\n'), 'text/csv'); };
+
+/* ================= settings ================= */
+function drawSubs() {
+  $('subList').innerHTML = subjects.map(s => `<span class="chip">${esc(s)}<span class="x" data-s="${esc(s)}" title="Remove">×</span></span>`).join('');
+  $('subList').querySelectorAll('.x').forEach(x => x.onclick = async () => { try { const r = await call('removeSubject', token, x.dataset.s); subjects = r.subjects; drawSubs(); drawChips(); } catch (e) { $('subErr').textContent = errText(e); } });
+}
+$('newSub').oninput = () => $('subErr').textContent = '';
+$('addSubBtn').onclick = async () => {
+  const v = $('newSub').value.trim(); if (!v) { $('subErr').textContent = 'Enter a subject name first'; return; }
+  try { const r = await call('addSubject', token, v); if (!r.ok) { $('subErr').textContent = r.error; return; } subjects = r.subjects; $('newSub').value = ''; drawSubs(); drawChips(); } catch (e) { $('subErr').textContent = errText(e); }
+};
+['cp0','cp1','cp2'].forEach(i => $(i).addEventListener('input', () => { $('cpErr').textContent = ''; $('cpOk').textContent = ''; }));
+$('cpBtn').onclick = async () => {
+  if (!$('cp0').value) { $('cpErr').textContent = 'Enter your current password first'; return; }
+  if ($('cp1').value.length < 6) { $('cpErr').textContent = 'New password must be at least 6 characters'; return; }
+  if ($('cp1').value !== $('cp2').value) { $('cpErr').textContent = "The new passwords don't match"; return; }
+  try { const r = await call('changePassword', token, $('cp0').value, $('cp1').value); if (!r.ok) { $('cpErr').textContent = r.error; return; } ['cp0','cp1','cp2'].forEach(i => $(i).value = ''); $('cpOk').textContent = 'Password changed.'; } catch (e) { $('cpErr').textContent = errText(e); }
+};
+
+/* ================= downloads / print ================= */
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+$('tplBtn').onclick = () => download('cie_import_template.csv', 'ERP Number,Candidate Number,Name of Candidate,Year,Series,Subjects,Grades,Contact Number 1,Contact Number 2\n10234,0012,Ali Khan,2012,May/June,"Mathematics, Physics, English","A*, A, B",0300-1234567,0321-7654321\n', 'text/csv');
+$('csvBtn').onclick = () => { const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const h = ['ERP Number','Candidate Number','Name of Candidate','Year','Series','Subjects','Grades','Contact Number 1','Contact Number 2','Status','Date Collected','Collected By','Collector Name','ID Checked','Handed Over By','Remarks'];
+  const lines = [h.map(q).join(',')].concat(students.map(s => [s.erp,s.cn,s.name,s.year,s.series,s.subjects,s.grades,s.p1,s.p2,s.st,s.date,s.by,s.byName,s.idno,s.staff,s.rem].map(q).join(',')));
+  download('senior_section_cie_' + today() + '.csv', '﻿' + lines.join('\r\n'), 'text/csv'); };
+$('printBtn').onclick = () => {
+  const list = filtered(), y = $('fy').value || 'All years', st = $('fst').value === 'Left' ? ' - still left' : $('fst').value === 'Collected' ? ' - collected' : '';
+  const title = 'Senior Section CIE Tracker: ' + y + ($('fs').value ? ' ' + $('fs').value : '') + st;
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:20px}h1{font-size:16px;margin:0 0 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eee}</style></head><body>
+  <h1>${esc(title)}</h1><p>Printed ${today()} · ${list.length} students · Powered by Senior Section Management</p><table><tr><th>#</th><th>ERP</th><th>Cand. no.</th><th>Name</th><th>Year</th><th>Subjects</th><th>Contact</th><th>Status</th><th style="width:110px">Signature</th></tr>
+  ${list.map((s, i) => `<tr><td>${i+1}</td><td>${esc(s.erp)}</td><td>${esc(s.cn)}</td><td>${esc(s.name)}</td><td>${esc(s.year)} ${esc(s.series)}</td><td>${subPairs(s).map(x => esc(x[0]) + ' ' + esc(x[1])).join(', ')}</td><td>${esc(s.p1)}${s.p2 ? '<br>' + esc(s.p2) : ''}</td><td>${s.st === 'Collected' ? 'Collected ' + esc(s.date) : 'Left'}</td><td></td></tr>`).join('')}</table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w = window.open(URL.createObjectURL(new Blob([html], {type:'text/html'})), '_blank');
+  if (!w) download('cie_list_' + today() + '.html', html, 'text/html');
+};
+</script>
+</body>
+</html>
