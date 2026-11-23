@@ -162,7 +162,7 @@ td.nm{color:var(--accent);cursor:pointer;font-weight:500}
   <div class="stat"><p class="l">Still left</p><p class="v" id="sL" style="color:var(--bad)">0</p></div>
  </div>
  <div class="bar">
-  <input id="q" placeholder="Search name, ERP number, candidate number or phone">
+  <input id="q" placeholder="Search name, ERP, candidate no., CNIC or phone">
   <select id="fy"><option value="">All years</option></select>
   <select id="fs"><option value="">All series</option><option>May/June</option><option>Oct/Nov</option><option>Feb/March</option></select>
   <select id="fst"><option value="">All status</option><option value="Left">Still left</option><option value="Collected">Collected</option></select>
@@ -184,6 +184,7 @@ td.nm{color:var(--accent);cursor:pointer;font-weight:500}
    <div><label>ERP number <span class="req">*</span></label><input id="f-erp" placeholder="10234"></div>
    <div><label>Candidate number <span class="req">*</span></label><input id="f-cn" placeholder="0012"></div>
    <div class="full"><label>Name of candidate <span class="req">*</span></label><input id="f-name" placeholder="Ali Khan"></div>
+   <div class="full"><label>CNIC / B-Form number <span class="req">*</span></label><input id="f-cnic" placeholder="XXXXX-XXXXXXX-X" inputmode="numeric" maxlength="15" style="max-width:320px"></div>
    <div><label>Year <span class="req">*</span></label><select id="f-year"></select></div>
    <div><label>Series <span class="req">*</span></label><select id="f-series"><option>May/June</option><option>Oct/Nov</option><option>Feb/March</option></select></div>
    <div><label>Contact number 1 <span class="req">*</span></label><input id="f-p1" placeholder="0300-1234567"></div>
@@ -300,6 +301,7 @@ const demo = (() => {
     S('13002','0150','Hamza Siddiqui','2019','May/June','Mathematics, Physics, Chemistry, Biology, Global Perspectives','B, B, C, B, A','0301-2223344','0322-6677889'),
     S('13540','0033','Fatima Noor','2024','Oct/Nov','Business, Global Perspectives, Mathematics','A*, A, A','0336-7788990','')
   ];
+  ['35202-1234567-1','35201-2345678-2','35202-3456789-3','35201-4567890-4','35202-5678901-5','35201-6789012-6'].forEach((c, i) => students[i].cnic = c);
   let sess = null;
   const clone = o => JSON.parse(JSON.stringify(o));
   const need = () => { if (!sess) throw new Error('SESSION_EXPIRED'); return sess; };
@@ -360,7 +362,7 @@ const fb = (() => {
   }
   const toObj = d => Object.assign({id:d.id}, d.data());
   const clean = v => String(v == null ? '' : v).trim().slice(0, 500);
-  const FIELDS = ['erp','cn','name','year','series','subjects','grades','p1','p2'];
+  const FIELDS = ['erp','cn','name','cnic','year','series','subjects','grades','p1','p2'];
   let cache = [];
   async function getSubjects() { const d = await db.collection('config').doc('settings').get(); return d.exists && Array.isArray(d.data().subjects) ? d.data().subjects : null; }
   async function staffList() { const q = await db.collection('staff').get(); return [{user:adminEmail,role:'Admin',hasPassword:true,canLog:true}].concat(q.docs.map(d => ({user:d.id,role:'Staff',hasPassword:null,canLog:d.data().canViewLog === true}))); }
@@ -534,7 +536,7 @@ $('refreshBtn').onclick = load;
 $('moreBtn').onclick = () => { shown += 200; drawList(); };
 function filtered() {
   const q = $('q').value.trim().toLowerCase(), y = $('fy').value, se = $('fs').value, st = $('fst').value;
-  return students.filter(s => (!y || s.year === y) && (!se || s.series === se) && (!st || s.st === st) && (!q || [s.name,s.erp,s.cn,s.p1,s.p2].join(' ').toLowerCase().includes(q)))
+  return students.filter(s => (!y || s.year === y) && (!se || s.series === se) && (!st || s.st === st) && (!q || (h => h.includes(q) || h.replace(/-/g, '').includes(q.replace(/-/g, '')))([s.name,s.erp,s.cn,s.cnic,s.p1,s.p2].join(' ').toLowerCase())))
     .sort((a,b) => b.year - a.year || String(a.cn).localeCompare(String(b.cn)));
 }
 const subHtml = s => subPairs(s).map(x => esc(x[0]) + ' <b>' + esc(x[1]) + '</b>').join(', ');
@@ -578,7 +580,7 @@ function detail(id) {
   const s = find(id); if (!s) return closeModal();
   const done = s.st === 'Collected';
   openModal(`<h2>${esc(s.name)}</h2><span class="pill ${esc(s.st)}">${done ? 'Collected' : 'Left'}</span>
-  <div class="kv"><span class="k">ERP number</span><span>${esc(s.erp)||'-'}</span><span class="k">Candidate number</span><span>${esc(s.cn)||'-'}</span>
+  <div class="kv"><span class="k">ERP number</span><span>${esc(s.erp)||'-'}</span><span class="k">Candidate number</span><span>${esc(s.cn)||'-'}</span><span class="k">CNIC / B-Form</span><span>${esc(s.cnic)||'-'}</span>
   <span class="k">Year / series</span><span>${esc(s.year)} ${esc(s.series)}</span>
   <span class="k">Subjects</span><span>${subPairs(s).map(x => esc(x[0]) + ': <b>' + esc(x[1]) + '</b>').join('<br>') || '-'}</span>
   <span class="k">Contact 1</span><span>${esc(s.p1)||'-'}</span><span class="k">Contact 2</span><span>${esc(s.p2)||'-'}</span>
@@ -599,9 +601,10 @@ function collect(id) {
   openModal(`<h2>Hand over certificate</h2><p class="muted" style="margin:0 0 14px">${esc(s.name)} · ${esc(s.year)} ${esc(s.series)} · Candidate ${esc(s.cn)}</p>
   <div class="grid"><div><label>Collected by</label><select id="cBy"><option>Self</option><option>Father</option><option>Mother</option><option>Brother/Sister</option><option>Authorised person</option></select></div>
   <div><label>Date</label><input id="cDate" value="${today()}"></div><div id="cNameW" class="hidden"><label>Collector's name</label><input id="cName"></div>
-  <div><label>CNIC / B-Form no. checked</label><input id="cId" placeholder="35202-xxxxxxx-x"></div><div class="full"><label>Remarks (optional)</label><input id="cRem" value="${esc(s.rem)}"></div></div>
+  <div><label>CNIC / B-Form no. checked</label><input id="cId" placeholder="XXXXX-XXXXXXX-X" maxlength="15" value="${esc(s.cnic)}"></div><div class="full"><label>Remarks (optional)</label><input id="cRem" value="${esc(s.rem)}"></div></div>
   <div id="cErr" class="err"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="primary" id="cOk">Confirm collected</button><button id="cNo">Cancel</button></div>`);
-  $('cBy').onchange = () => $('cNameW').classList.toggle('hidden', $('cBy').value === 'Self');
+  $('cBy').onchange = () => { const self = $('cBy').value === 'Self'; $('cNameW').classList.toggle('hidden', self); $('cId').value = self ? (s.cnic || '') : ''; };
+  $('cId').addEventListener('input', e => { const f = fmtCnic(e.target.value); if (e.target.value !== f) e.target.value = f; });
   $('cName').oninput = () => $('cErr').textContent = ''; $('cNo').onclick = closeModal;
   $('cOk').onclick = async () => {
     const by = $('cBy').value;
@@ -622,10 +625,12 @@ function remark(id) {
 }
 
 /* ================= add / edit ================= */
-function resetForm() { editId = null; picked = []; ['f-erp','f-cn','f-name','f-p1','f-p2'].forEach(i => { $(i).value = ''; $(i).classList.remove('bad-in'); }); $('formTitle').textContent = 'Add student'; $('saveBtn').textContent = 'Save student'; $('formErr').textContent = ''; drawChips(); }
+function fmtCnic(v) { const d = String(v || '').replace(/\D/g, '').slice(0, 13); return d.length > 12 ? d.slice(0,5) + '-' + d.slice(5,12) + '-' + d.slice(12) : d.length > 5 ? d.slice(0,5) + '-' + d.slice(5) : d; }
+$('f-cnic').addEventListener('input', e => { const el = e.target, f = fmtCnic(el.value); if (el.value !== f) el.value = f; });
+function resetForm() { editId = null; picked = []; ['f-erp','f-cn','f-name','f-cnic','f-p1','f-p2'].forEach(i => { $(i).value = ''; $(i).classList.remove('bad-in'); }); $('formTitle').textContent = 'Add student'; $('saveBtn').textContent = 'Save student'; $('formErr').textContent = ''; drawChips(); }
 function startEdit(id) {
   const s = find(id); show('add'); editId = id;
-  $('f-erp').value = s.erp; $('f-cn').value = s.cn; $('f-name').value = s.name; $('f-year').value = s.year; $('f-series').value = s.series; $('f-p1').value = s.p1; $('f-p2').value = s.p2;
+  $('f-erp').value = s.erp; $('f-cn').value = s.cn; $('f-name').value = s.name; $('f-cnic').value = s.cnic || ''; $('f-year').value = s.year; $('f-series').value = s.series; $('f-p1').value = s.p1; $('f-p2').value = s.p2;
   picked = subPairs(s).map(x => ({s:x[0], g:x[1]})); $('formTitle').textContent = 'Edit student'; $('saveBtn').textContent = 'Save changes'; $('formErr').textContent = ''; $('formOk').textContent = ''; drawChips();
 }
 function drawChips() {
@@ -637,15 +642,16 @@ function drawChips() {
   const o = $('opts'); o.innerHTML = '';
   subjects.filter(s => !picked.find(p => p.s === s)).forEach(s => { const b = document.createElement('button'); b.className = 'opt'; b.textContent = '+ ' + s; b.onclick = () => { picked.push({s, g:'A'}); drawChips(); }; o.appendChild(b); });
 }
-['f-erp','f-cn','f-name','f-p1','f-p2'].forEach(i => $(i).addEventListener('input', () => { $(i).classList.remove('bad-in'); $('formErr').textContent = ''; $('formOk').textContent = ''; }));
+['f-erp','f-cn','f-name','f-cnic','f-p1','f-p2'].forEach(i => $(i).addEventListener('input', () => { $(i).classList.remove('bad-in'); $('formErr').textContent = ''; $('formOk').textContent = ''; }));
 $('clearBtn').onclick = () => { resetForm(); $('formOk').textContent = ''; };
 $('saveBtn').onclick = async () => {
   const v = i => $(i).value.trim();
-  const req = [['f-erp','ERP number'],['f-cn','candidate number'],['f-name','name of candidate'],['f-year','year'],['f-series','series'],['f-p1','contact number 1']];
+  const req = [['f-erp','ERP number'],['f-cn','candidate number'],['f-name','name of candidate'],['f-cnic','CNIC / B-Form number'],['f-year','year'],['f-series','series'],['f-p1','contact number 1']];
   req.forEach(([i]) => $(i).classList.toggle('bad-in', !v(i)));
   const miss = req.filter(([i]) => !v(i)).map(x => x[1]);
   if (miss.length) { $('formErr').textContent = 'Fill in: ' + miss.join(', '); const first = req.find(([i]) => !v(i)); $(first[0]).focus(); return; }
-  const o = {erp:v('f-erp'),cn:v('f-cn'),name:v('f-name'),year:$('f-year').value,series:$('f-series').value,p1:v('f-p1'),p2:v('f-p2'),subjects:picked.map(x => x.s).join(', '),grades:picked.map(x => x.g).join(', ')};
+  if (!/^\d{5}-\d{7}-\d$/.test(v('f-cnic'))) { $('f-cnic').classList.add('bad-in'); $('formErr').textContent = 'CNIC / B-Form must be 13 digits in the format XXXXX-XXXXXXX-X'; $('f-cnic').focus(); return; }
+  const o = {erp:v('f-erp'),cn:v('f-cn'),name:v('f-name'),cnic:v('f-cnic'),year:$('f-year').value,series:$('f-series').value,p1:v('f-p1'),p2:v('f-p2'),subjects:picked.map(x => x.s).join(', '),grades:picked.map(x => x.g).join(', ')};
   if (editId) o.id = editId;
   $('saveBtn').disabled = true;
   try { const r = await call('saveStudent', token, o);
@@ -673,7 +679,7 @@ function parseCSV(t) { const out = []; let row = [], f = '', q = false; for (let
   if (f || row.length) { row.push(f); out.push(row); } return out.filter(r => r.some(x => String(x).trim())); }
 function colIndex(h) { const n = h.map(x => String(x).toLowerCase().replace(/[^a-z0-9]/g, '')); const fi = (...k) => n.findIndex(x => k.some(y => x.includes(y)));
   const p1 = fi('contact1','contactnumber1','phone1','mobile1','contactno1'), p2 = fi('contact2','contactnumber2','phone2','mobile2','contactno2');
-  return {erp:fi('erp'),cn:fi('candidatenumber','candidateno','candno','candnumber','indexno','candidate'),name:n.findIndex(x => x.includes('name') && !x.includes('father')),
+  return {cnic:fi('cnic','bform','nic','idcard'),erp:fi('erp'),cn:fi('candidatenumber','candidateno','candno','candnumber','indexno','candidate'),name:n.findIndex(x => x.includes('name') && !x.includes('father')),
     year:fi('year'),series:fi('series','session'),sub:fi('subject','syllabus'),gr:fi('grade','result'),p1:p1 >= 0 ? p1 : fi('contact','phone','mobile'),p2}; }
 function normSeries(s) { s = String(s).toLowerCase(); if (!s) return ''; if (/nov|oct/.test(s)) return 'Oct/Nov'; if (/feb|mar/.test(s)) return 'Feb/March'; if (/may|jun/.test(s)) return 'May/June'; return ''; }
 function build(rows) {
@@ -683,8 +689,8 @@ function build(rows) {
   const g = k => r => k >= 0 ? String(r[k] ?? '').trim() : ''; const map = new Map();
   rows.slice(1).forEach(r => { const cn = g(ci.cn)(r), name = g(ci.name)(r); if (!cn && !name) return;
     const year = (g(ci.year)(r).match(/\d{4}/) || [])[0] || $('i-year').value, series = normSeries(g(ci.series)(r)) || $('i-series').value, key = cn + '|' + year + '|' + series;
-    if (!map.has(key)) map.set(key, {erp:g(ci.erp)(r),cn,name,year,series,p1:g(ci.p1)(r),p2:g(ci.p2)(r),subs:[]});
-    const s = map.get(key); if (!s.erp) s.erp = g(ci.erp)(r); if (!s.p1) s.p1 = g(ci.p1)(r); if (!s.p2) s.p2 = g(ci.p2)(r);
+    if (!map.has(key)) map.set(key, {erp:g(ci.erp)(r),cnic:fmtCnic(g(ci.cnic)(r)),cn,name,year,series,p1:g(ci.p1)(r),p2:g(ci.p2)(r),subs:[]});
+    const s = map.get(key); if (!s.erp) s.erp = g(ci.erp)(r); if (!s.cnic) s.cnic = fmtCnic(g(ci.cnic)(r)); if (!s.p1) s.p1 = g(ci.p1)(r); if (!s.p2) s.p2 = g(ci.p2)(r);
     const subs = g(ci.sub)(r).split(/[,;\/]/).map(x => x.trim()).filter(Boolean), grs = g(ci.gr)(r).split(/[,;\/]/).map(x => x.trim());
     subs.forEach((x, i) => { if (!s.subs.find(y => y[0].toLowerCase() === x.toLowerCase())) s.subs.push([x, grs[i] || '']); }); });
   const all = [...map.values()];
@@ -698,7 +704,7 @@ function build(rows) {
   $('noImp').onclick = () => { pending = []; $('impPrev').innerHTML = ''; };
   if ($('doImp')) $('doImp').onclick = async () => {
     $('doImp').disabled = true;
-    const list = pending.map(p => ({erp:p.erp,cn:p.cn,name:p.name,year:p.year,series:p.series,p1:p.p1,p2:p.p2,subjects:p.subs.map(x => x[0]).join(', '),grades:p.subs.map(x => x[1]).join(', ')}));
+    const list = pending.map(p => ({erp:p.erp,cn:p.cn,name:p.name,cnic:p.cnic,year:p.year,series:p.series,p1:p.p1,p2:p.p2,subjects:p.subs.map(x => x[0]).join(', '),grades:p.subs.map(x => x[1]).join(', ')}));
     try { const r = await call('importStudents', token, list); students = r.students; subjects = r.subjects; drawList(); drawChips(); drawSubs(); pending = []; $('impPrev').innerHTML = `<p class="okmsg">${r.added} students imported.</p>`; }
     catch (e) { $('impRes').innerHTML = `<p class="err">${esc(errText(e))}</p>`; $('doImp').disabled = false; }
   };
@@ -773,17 +779,17 @@ $('cpBtn').onclick = async () => {
 
 /* ================= downloads / print ================= */
 function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
-$('tplBtn').onclick = () => download('cie_import_template.csv', 'ERP Number,Candidate Number,Name of Candidate,Year,Series,Subjects,Grades,Contact Number 1,Contact Number 2\n10234,0012,Ali Khan,2012,May/June,"Mathematics, Physics, English","A*, A, B",0300-1234567,0321-7654321\n', 'text/csv');
+$('tplBtn').onclick = () => download('cie_import_template.csv', 'ERP Number,Candidate Number,Name of Candidate,CNIC,Year,Series,Subjects,Grades,Contact Number 1,Contact Number 2\n10234,0012,Ali Khan,35202-1234567-1,2012,May/June,"Mathematics, Physics, English","A*, A, B",0300-1234567,0321-7654321\n', 'text/csv');
 $('csvBtn').onclick = () => { const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const h = ['ERP Number','Candidate Number','Name of Candidate','Year','Series','Subjects','Grades','Contact Number 1','Contact Number 2','Status','Date Collected','Collected By','Collector Name','ID Checked','Handed Over By','Remarks'];
-  const lines = [h.map(q).join(',')].concat(students.map(s => [s.erp,s.cn,s.name,s.year,s.series,s.subjects,s.grades,s.p1,s.p2,s.st,s.date,s.by,s.byName,s.idno,s.staff,s.rem].map(q).join(',')));
+  const h = ['ERP Number','Candidate Number','Name of Candidate','CNIC / B-Form','Year','Series','Subjects','Grades','Contact Number 1','Contact Number 2','Status','Date Collected','Collected By','Collector Name','ID Checked','Handed Over By','Remarks'];
+  const lines = [h.map(q).join(',')].concat(students.map(s => [s.erp,s.cn,s.name,s.cnic,s.year,s.series,s.subjects,s.grades,s.p1,s.p2,s.st,s.date,s.by,s.byName,s.idno,s.staff,s.rem].map(q).join(',')));
   download('senior_section_cie_' + today() + '.csv', '﻿' + lines.join('\r\n'), 'text/csv'); };
 $('printBtn').onclick = () => {
   const list = filtered(), y = $('fy').value || 'All years', st = $('fst').value === 'Left' ? ' - still left' : $('fst').value === 'Collected' ? ' - collected' : '';
   const title = 'Senior Section CIE Tracker: ' + y + ($('fs').value ? ' ' + $('fs').value : '') + st;
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:20px}h1{font-size:16px;margin:0 0 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eee}</style></head><body>
-  <h1>${esc(title)}</h1><p>Printed ${today()} · ${list.length} students · Powered by Senior Section Management</p><table><tr><th>#</th><th>ERP</th><th>Cand. no.</th><th>Name</th><th>Year</th><th>Subjects</th><th>Contact</th><th>Status</th><th style="width:110px">Signature</th></tr>
-  ${list.map((s, i) => `<tr><td>${i+1}</td><td>${esc(s.erp)}</td><td>${esc(s.cn)}</td><td>${esc(s.name)}</td><td>${esc(s.year)} ${esc(s.series)}</td><td>${subPairs(s).map(x => esc(x[0]) + ' ' + esc(x[1])).join(', ')}</td><td>${esc(s.p1)}${s.p2 ? '<br>' + esc(s.p2) : ''}</td><td>${s.st === 'Collected' ? 'Collected ' + esc(s.date) : 'Left'}</td><td></td></tr>`).join('')}</table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  <h1>${esc(title)}</h1><p>Printed ${today()} · ${list.length} students · Powered by Senior Section Management</p><table><tr><th>#</th><th>ERP</th><th>Cand. no.</th><th>Name</th><th>CNIC / B-Form</th><th>Year</th><th>Subjects</th><th>Contact</th><th>Status</th><th style="width:110px">Signature</th></tr>
+  ${list.map((s, i) => `<tr><td>${i+1}</td><td>${esc(s.erp)}</td><td>${esc(s.cn)}</td><td>${esc(s.name)}</td><td>${esc(s.cnic)}</td><td>${esc(s.year)} ${esc(s.series)}</td><td>${subPairs(s).map(x => esc(x[0]) + ' ' + esc(x[1])).join(', ')}</td><td>${esc(s.p1)}${s.p2 ? '<br>' + esc(s.p2) : ''}</td><td>${s.st === 'Collected' ? 'Collected ' + esc(s.date) : 'Left'}</td><td></td></tr>`).join('')}</table><script>window.onload=()=>window.print()<\/script></body></html>`;
   const w = window.open(URL.createObjectURL(new Blob([html], {type:'text/html'})), '_blank');
   if (!w) download('cie_list_' + today() + '.html', html, 'text/html');
 };
